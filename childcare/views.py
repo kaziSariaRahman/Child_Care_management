@@ -45,3 +45,50 @@ def user_login(request):
 
     return render(request, 'auth/login.html')
 
+
+def staff_login(request):
+    if request.method == 'POST':
+        email = request.POST['email']
+        password = request.POST['password']
+        try:
+            user = User.objects.get(email=email)
+            if not user.is_active:
+                messages.error(request, 'Your account is not yet approved by the admin.')
+                return redirect('staff_login')
+            user = authenticate(request, username=user.username, password=password)
+        except User.DoesNotExist:
+            user = None
+        
+        if user is not None:
+            login(request, user)
+            return redirect('dashboard')
+        else:
+            messages.error(request, 'Invalid email or password')
+    
+    return render(request, 'auth/staff_login.html')
+
+
+def signup_staff(request):
+    if request.method == 'POST':
+        username = request.POST['username']
+        email = request.POST['email']
+        password = request.POST['password']
+        mobile = request.POST['mobile']
+        is_staff = 'is_staff' in request.POST
+        
+        if User.objects.filter(username=username).exists():
+            messages.error(request, 'Username already taken')
+            return redirect('signup_staff')
+        
+        if User.objects.filter(email=email).exists():
+            messages.error(request, 'Email already taken')
+            return redirect('signup_staff')
+        
+        # Create the user with is_active set to False
+        user = User.objects.create_user(username=username, email=email, password=password, is_active=False)
+        Staff.objects.create(user=user, mobile=mobile, is_staff=is_staff, is_active=True)
+        
+        messages.success(request, 'Staff registration is successful. Please wait for admin approval.')
+        return redirect('staff_login')
+    
+    return render(request, 'auth/signup_staff.html')
