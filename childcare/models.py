@@ -12,3 +12,17 @@ class Staff(models.Model):
     
     def __str__(self):
         return self.user.username
+
+
+class Child(models.Model):
+    parent = models.ForeignKey(Parent, on_delete=models.CASCADE, related_name='children')
+    name = models.CharField(max_length=255)
+    age = models.PositiveIntegerField(default=0)
+    date_of_birth = models.DateField()
+    image = models.ImageField(upload_to='child_images/')
+    unique_id = models.UUIDField(default=uuid.uuid4, editable=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.name} ({self.unique_id})"
