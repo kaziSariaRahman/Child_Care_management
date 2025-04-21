@@ -92,3 +92,21 @@ def signup_staff(request):
         return redirect('staff_login')
     
     return render(request, 'auth/signup_staff.html')
+
+
+@login_required(login_url='login')
+def add_child(request):
+    if request.method == 'POST':
+        name = request.POST['name']
+        age = request.POST['age']
+        dob = request.POST['date_of_birth']
+        image = request.FILES.get('image')
+
+        parent = get_object_or_404(Parent, user=request.user)
+        Child.objects.create(
+            parent=parent, name=name, age=age, date_of_birth=dob, image=image, unique_id=uuid.uuid4()
+        )
+        messages.success(request, 'Child added successfully!')
+        return redirect('parent_profile')
+
+    return render(request, 'profile/add_child.html')
