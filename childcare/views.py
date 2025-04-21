@@ -1,6 +1,14 @@
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.models import User
 from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from .models import *
+from django.contrib.auth.decorators import login_required
+import uuid
+from django.utils.timezone import now
+from datetime import timedelta
+from django.db.models import Count, Sum
+
 
 
 # Create your views here.
@@ -110,3 +118,14 @@ def add_child(request):
         return redirect('parent_profile')
 
     return render(request, 'profile/add_child.html')
+
+
+@login_required
+def user_logout(request):
+    logout(request)
+    return redirect('home')
+
+@login_required
+def staff_logout(request):
+    logout(request)
+    return redirect('home')
