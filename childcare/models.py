@@ -26,3 +26,12 @@ class Child(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.unique_id})"
+
+
+class Parent(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='parent')
+    phone = models.CharField(max_length=25)
+    address = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.user.username
