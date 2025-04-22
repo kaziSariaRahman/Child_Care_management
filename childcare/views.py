@@ -129,3 +129,21 @@ def user_logout(request):
 def staff_logout(request):
     logout(request)
     return redirect('home')
+
+
+@login_required(login_url='login')
+def parent_profile(request):
+    parent = get_object_or_404(Parent, user=request.user)
+    children = parent.children.all()
+
+    if request.method == 'POST':
+        phone = request.POST.get('phone')
+        address = request.POST.get('address')
+        parent.phone = phone
+        parent.address = address
+        parent.save()
+        messages.success(request, 'Profile updated successfully!')
+        return redirect('parent_profile')
+
+    return render(request, 'profile/parent_profile.html', {'parent': parent, 'children': children})
+
