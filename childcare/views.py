@@ -147,3 +147,77 @@ def parent_profile(request):
 
     return render(request, 'profile/parent_profile.html', {'parent': parent, 'children': children})
 
+
+# Booking Views
+@login_required(login_url='login')
+def booking(request, package_id):
+    parent = get_object_or_404(Parent, user=request.user)
+    children = Child.objects.filter(parent=parent)
+    package = get_object_or_404(Package, id=package_id)
+
+    if request.method == 'POST':
+        selected_children_ids = request.POST.getlist('children')  # Get list of selected children
+        start_date = request.POST.get('start_date')
+
+        if not selected_children_ids:
+            messages.error(request, "Please select at least one child.")
+            return redirect('booking', package_id=package_id)
+
+        # Create the booking
+        booking = Booking.objects.create(
+            parent=parent,
+            package=package,
+            total_price=package.price,
+            start_date=start_date,
+            end_date=now().date() + timedelta(days=package.duration_days),
+            status="pending",
+            is_paid=False
+        )
+        booking.children.set(selected_children_ids)
+
+        messages.success(request, "Booking initiated. Proceed to checkout.")
+        return redirect('checkout', booking_id=booking.id)
+
+    return render(request, 'booking/booking.html', {'package': package, 'children': children})
+
+
+# Checkout Views
+@login_required(login_url='login')
+def checkout(request, booking_id):
+    booking = get_object_or_404(Booking, id=booking_id, parent__user=request.user)
+
+    if request.method == 'POST':
+        payment_method = request.POST.get('payment_method')
+
+        if payment_method not in ['card', 'bkash', 'nagad', 'cash']:
+            messages.error(request, "Invalid payment method selected.")
+            return redirect('checkout', booking_id=booking.id)
+
+        transaction = Transaction.objects.create(
+            booking=booking,
+            payment_method=payment_method,
+            transaction_id=uuid.uuid4(),
+            is_successful=True
+        )
+
+        # Update booking status to confirmed
+        booking.is_paid = True
+        booking.status = "confirmed"
+        booking.save()
+
+        messages.success(request, "Payment successful! Your booking is confirmed.")
+        return redirect('my_bookings')
+
+    return render(request, 'booking/checkout.html', {'booking': booking})
+
+
+# My Bookings Views
+@login_required(login_url='login')
+def my_bookings(request):
+    parent = get_object_or_404(Parent, user=request.user)
+    bookings = Booking.objects.filter(parent=parent).order_by('-created_at')
+
+    return render(request, 'booking/my_bookings.html', {'bookings': bookings})
+
+
+
