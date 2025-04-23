@@ -220,4 +220,35 @@ def my_bookings(request):
     return render(request, 'booking/my_bookings.html', {'bookings': bookings})
 
 
+@login_required(login_url='login')
+def edit_child(request, child_id):
+    child = get_object_or_404(Child, id=child_id, parent__user=request.user)
+
+    if request.method == 'POST':
+        child.name = request.POST['name']
+        child.age = request.POST['age']
+        child.date_of_birth = request.POST['date_of_birth']
+        if 'image' in request.FILES:
+            child.image = request.FILES['image']
+        child.save()
+        messages.success(request, 'Child updated successfully!')
+        return redirect('parent_profile')
+
+    return render(request, 'profile/edit_child.html', {'child': child})
+
+
+@login_required(login_url='login')
+def delete_child(request, child_id):
+    child = get_object_or_404(Child, id=child_id, parent__user=request.user)
+    child.delete()
+    messages.success(request, 'Child deleted successfully!')
+    return redirect('parent_profile')
+
+
+# Package Views
+def packages(request):
+    packages = Package.objects.filter(is_active=True)
+    return render(request, 'package.html', {'packages': packages})
+
+
 
