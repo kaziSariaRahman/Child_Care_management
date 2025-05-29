@@ -117,5 +117,16 @@ class Report(models.Model):
         return f"Report ({self.status}) - {self.staff.user.username} - {self.booking.package.name}"
 
 
+class Feedback(models.Model):
+    booking = models.ForeignKey(Booking, on_delete=models.CASCADE, related_name="feedbacks")
+    parent = models.ForeignKey(Parent, on_delete=models.CASCADE, related_name="feedbacks")
+    rating = models.PositiveIntegerField(default=0)
+    comment = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        unique_together = ('booking', 'parent')
 
+    def __str__(self):
+        return f"Feedback ({self.rating}) - {self.parent.user.username} - {self.booking.package.name}"
